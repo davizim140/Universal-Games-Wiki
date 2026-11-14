@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  let user: { id: string; email?: string; user_metadata?: Record<string, unknown> } | null = null;
+  let user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } | null = null;
   let username = "";
   try {
     const supabase = await createClient();
