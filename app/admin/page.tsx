@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { createGame, reviewContribution } from "@/app/actions";
+import { createGame } from "@/app/actions";
+import LiveContributions from "@/app/admin/contributions-live";
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<{ erro?: string; sucesso?: string }> }) {
   const p = await searchParams;
@@ -41,17 +42,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       <section style={{ marginTop: 30 }}>
         <h2 style={{ fontSize: 24, marginBottom: 6 }}>Contribuições pendentes</h2>
         {message && <p className="muted">{message}</p>}
-        {!items.length ? <div className="panel" style={{ padding: 28, textAlign: "center" }}>Nenhuma contribuição pendente.</div> : <div style={{ display: "grid", gap: 16, marginTop: 18 }}>
-          {items.map(item => <article className="panel" key={item.id} style={{ padding: 22 }}>
-            <div style={{ color: "#a78bfa", fontSize: 12 }}>{item.type} · {item.platform || "Plataforma não informada"} · {new Date(item.created_at).toLocaleString("pt-BR")}</div>
-            <h2 style={{ margin: "8px 0" }}>{item.title}</h2><p>{item.payload?.summary}</p>{item.payload?.description && <p className="muted" style={{ whiteSpace: "pre-wrap" }}>{item.payload.description}</p>}
-            <form action={reviewContribution} style={{ display: "grid", gap: 10, marginTop: 16 }}>
-              <input type="hidden" name="id" value={item.id} />
-              <textarea className="field" name="note" rows={2} placeholder="Observação da moderação (opcional)" />
-              <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}><button className="btn" name="decision" value="approve">Aprovar</button><button className="btn btn-secondary" name="decision" value="reject">Rejeitar</button></div>
-            </form>
-          </article>)}
-        </div>}
+        <LiveContributions initialItems={items} />
       </section>
     </>}
   </main>;
