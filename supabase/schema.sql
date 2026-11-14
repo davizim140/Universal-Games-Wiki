@@ -21,7 +21,8 @@ begin
  on conflict(id) do update set email=excluded.email,username=coalesce(public.profiles.username,excluded.username);
  return new;
 end;
-$$;
+$;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
 drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users for each row execute procedure public.handle_new_user();
 
@@ -51,6 +52,7 @@ begin
  update public.contributions set status=case when decision='approve' then 'approved' else 'rejected' end,moderator_id=auth.uid(),moderator_note=review_contribution.moderator_note,reviewed_at=now() where id=c.id;
  insert into public.revision_log(contribution_id,actor_id,action,details) values(c.id,auth.uid(),decision,jsonb_build_object('note',moderator_note,'type',c.type));
 end;$$;
+revoke execute on function public.review_contribution(uuid,text,text) from public, anon;
 grant execute on function public.review_contribution(uuid,text,text) to authenticated;
 -- Após criar sua conta no site, promova seu usuário:
 -- update public.profiles set role='admin' where email='SEU_EMAIL';
