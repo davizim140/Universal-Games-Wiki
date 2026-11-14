@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { resendSignupConfirmation, signUp } from "@/app/actions";
+import { signUp } from "@/app/actions";
 
 export default async function CadastroPage({ searchParams }: { searchParams: Promise<{ erro?: string; mensagem?: string }> }) {
   const p = await searchParams;
@@ -9,18 +9,12 @@ export default async function CadastroPage({ searchParams }: { searchParams: Pro
       {p.erro && <p role="alert" style={{ color: "#fca5a5" }}>{p.erro}</p>}
       {p.mensagem && <p role="status" style={{ color: "#86efac" }}>{p.mensagem}</p>}
       <form action={signUp} style={{ display: "grid", gap: 14 }}>
+        <label>Nome de usuário<input className="field" type="text" name="username" required minLength={3} maxLength={20} pattern="[A-Za-z0-9_]+" title="Use de 3 a 20 letras, números ou _." autoComplete="username" placeholder="Ex.: gamer123" /></label>
         <label>E-mail<input className="field" type="email" name="email" required autoComplete="email" /></label>
         <label>Senha (mínimo de 8 caracteres)<input className="field" type="password" name="password" minLength={8} required autoComplete="new-password" /></label>
         <button className="btn" type="submit">Criar conta</button>
       </form>
-      <div style={{ borderTop: "1px solid #333", marginTop: 22, paddingTop: 18 }}>
-        <p className="muted" style={{ marginTop: 0 }}>Já criou sua conta, mas não recebeu o e-mail ou o link expirou?</p>
-        <form action={resendSignupConfirmation} style={{ display: "grid", gap: 12 }}>
-          <label>E-mail cadastrado<input className="field" type="email" name="email" required autoComplete="email" /></label>
-          <button className="btn" type="submit">Reenviar confirmação</button>
-        </form>
-      </div>
-      <p className="muted" style={{ fontSize: 14 }}>Já tem conta? <Link href="/entrar" style={{ color: "#c4b5fd" }}>Entrar</Link></p>
+      <p className="muted" style={{ fontSize: 14, marginTop: 22 }}>Já tem conta? <Link href="/entrar" style={{ color: "#c4b5fd" }}>Entrar</Link></p>
     </div>
   </main>;
 }
