@@ -17,15 +17,25 @@ export async function signIn(formData: FormData) {
 
 export async function signUp(formData: FormData) {
   const supabase = await createClient();
-  const email = String(formData.get("email") || "");
+  const email = String(formData.get("email") || "").trim().toLowerCase();
+  const username = String(formData.get("username") || "").trim().toLowerCase();
   const password = String(formData.get("password") || "");
-  const { error } = await supabase.auth.signUp({
+
+  if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+    redirect("/cadastro?erro=" + encodeURIComponent("O nome de usuário deve ter de 3 a 20 caracteres: letras, números ou _."));
+  }
+
+  const { data: existing } = await supabase.from("profiles").select("id").ilike("username", username).maybeSingle();
+  if (existing) redirect("/cadastro?erro=" + encodeURIComponent("Esse nome de usuário já está em uso. Escolha outro."));
+
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { emailRedirectTo: SITE_URL }
+    options: { emailRedirectTo: SITE_URL, data: { username } }
   });
   if (error) redirect("/cadastro?erro=" + encodeURIComponent(error.message));
-  redirect("/cadastro?mensagem=Confira%20seu%20e-mail%20para%20confirmar%20o%20cadastro.");
+  if (data.session) redirect("/");
+  redirect("/entrar?mensagem=" + encodeURIComponent("Conta criada! Agora entre com seu e-mail e senha."));
 }
 
 export async function resendSignupConfirmation(formData: FormData) {
