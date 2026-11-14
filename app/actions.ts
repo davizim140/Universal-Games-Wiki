@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://universal-games-wiki.vercel.app";
+
 export async function signIn(formData: FormData) {
   const supabase = await createClient();
   const email = String(formData.get("email") || "");
@@ -17,9 +19,26 @@ export async function signUp(formData: FormData) {
   const supabase = await createClient();
   const email = String(formData.get("email") || "");
   const password = String(formData.get("password") || "");
-  const { error } = await supabase.auth.signUp({ email, password });
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: SITE_URL }
+  });
   if (error) redirect("/cadastro?erro=" + encodeURIComponent(error.message));
-  redirect("/entrar?mensagem=Confira seu e-mail para confirmar o cadastro.");
+  redirect("/cadastro?mensagem=Confira%20seu%20e-mail%20para%20confirmar%20o%20cadastro.");
+}
+
+export async function resendSignupConfirmation(formData: FormData) {
+  const supabase = await createClient();
+  const email = String(formData.get("email") || "").trim();
+  if (!email) redirect("/cadastro?erro=Informe%20seu%20e-mail.");
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email,
+    options: { emailRedirectTo: SITE_URL }
+  });
+  if (error) redirect("/cadastro?erro=" + encodeURIComponent(error.message));
+  redirect("/cadastro?mensagem=Se%20a%20conta%20estiver%20aguardando%20confirmação%2C%20um%20novo%20e-mail%20foi%20solicitado.");
 }
 
 export async function submitContribution(formData: FormData) {
