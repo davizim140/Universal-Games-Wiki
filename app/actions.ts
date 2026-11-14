@@ -76,13 +76,19 @@ export async function reviewContribution(formData: FormData) {
   const id = String(formData.get("id") || "");
   const decision = String(formData.get("decision") || "");
   const note = String(formData.get("note") || "");
-  if (!id || !["approve", "reject"].includes(decision)) redirect("/admin?erro=Solicitação%20inválida.");
+  if (!id || !["approve", "reject"].includes(decision)) {
+    return { ok: false, error: "Solicitação inválida." };
+  }
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (!profile || !["moderator", "admin"].includes(profile.role)) {
+    return { ok: false, error: "Sua conta não tem permissão para moderar." };
+  }
   const { error } = await supabase.rpc("review_contribution", {
-    contribution_id: id, decision, moderator_note: note
+    contribution_id: id, decision, moderator_note: note.slice(0, 2000)
   });
-  if (error) redirect("/admin?erro=" + encodeURIComponent(error.message));
+  if (error) return { ok: false, error: error.message };
   revalidatePath("/"); revalidatePath("/jogos"); revalidatePath("/admin");
-  redirect("/admin?sucesso=Análise%20registrada.");
+  return { ok: true };
 }
 
 export async function createGame(formData: FormData) {
