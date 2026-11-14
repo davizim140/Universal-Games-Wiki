@@ -119,7 +119,7 @@ export async function createGame(formData: FormData) {
     catch { redirect("/admin?erro=O%20link%20da%20capa%20é%20inválido."); }
   }
 
-  const baseSlug = title.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase()
+  const baseSlug = title.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 100) || "jogo";
   let slug = baseSlug;
   const { data: existing } = await supabase.from("games").select("id").eq("slug", slug).maybeSingle();
