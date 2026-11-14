@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { reviewContribution } from "@/app/actions";
 
@@ -72,12 +72,11 @@ export default function LiveContributions({ initialItems }: { initialItems: Cont
     ));
   }, [items, search, tab]);
 
-  async function moderate(event: FormEvent<HTMLFormElement>, item: Contribution, decision: "approve" | "reject") {
-    event.preventDefault();
+  async function moderate(form: HTMLFormElement, item: Contribution, decision: "approve" | "reject") {
     const actionLabel = decision === "approve" ? "aprovar" : "rejeitar";
     if (!window.confirm(`Tem certeza de que deseja ${actionLabel} “${item.title}”?`)) return;
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
     formData.set("id", item.id);
     formData.set("decision", decision);
     const note = String(formData.get("note") || "").trim();
@@ -152,11 +151,11 @@ export default function LiveContributions({ initialItems }: { initialItems: Cont
             <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
               <button className="btn" type="button" disabled={busy === item.id} onClick={(event) => {
                 const form = event.currentTarget.form;
-                if (form) void moderate({ preventDefault() {}, currentTarget: form } as FormEvent<HTMLFormElement>, item, "approve");
+                if (form) void moderate(form, item, "approve");
               }}>{busy === item.id ? "Salvando..." : "Aprovar"}</button>
               <button className="btn btn-secondary" type="button" disabled={busy === item.id} onClick={(event) => {
                 const form = event.currentTarget.form;
-                if (form) void moderate({ preventDefault() {}, currentTarget: form } as FormEvent<HTMLFormElement>, item, "reject");
+                if (form) void moderate(form, item, "reject");
               }}>{busy === item.id ? "Salvando..." : "Rejeitar"}</button>
             </div>
           </form>
