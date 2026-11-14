@@ -85,6 +85,51 @@ export async function reviewContribution(formData: FormData) {
   redirect("/admin?sucesso=Análise%20registrada.");
 }
 
+export async function createGame(formData: FormData) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/entrar?erro=Entre%20para%20continuar.");
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  if (profile?.role !== "admin") redirect("/admin?erro=Apenas%20administradores%20podem%20cadastrar%20jogos.");
+
+  const title = String(formData.get("title") || "").trim();
+  const platform = String(formData.get("platform") || "").trim();
+  const summary = String(formData.get("summary") || "").trim();
+  const description = String(formData.get("description") || "").trim();
+  const coverUrl = String(formData.get("cover_url") || "").trim();
+  const releaseDate = String(formData.get("release_date") || "").trim();
+  const developer = String(formData.get("developer") || "").trim();
+  const publisher = String(formData.get("publisher") || "").trim();
+  const genre = String(formData.get("genre") || "").trim();
+  const status = String(formData.get("status") || "published");
+
+  if (!title || !platform || !summary) {
+    redirect("/admin?erro=Preencha%20o%20nome%2C%20a%20plataforma%20e%20o%20resumo.");
+  }
+  if (!["published", "draft"].includes(status)) redirect("/admin?erro=Status%20inválido.");
+  if (coverUrl) {
+    try { const url = new URL(coverUrl); if (!["http:", "https:"].includes(url.protocol)) throw new Error(); }
+    catch { redirect("/admin?erro=O%20link%20da%20capa%20é%20inválido."); }
+  }
+
+  const baseSlug = title.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 100) || "jogo";
+  let slug = baseSlug;
+  const { data: existing } = await supabase.from("games").select("id").eq("slug", slug).maybeSingle();
+  if (existing) slug = baseSlug + "-" + crypto.randomUUID().slice(0, 8);
+
+  const { error } = await supabase.from("games").insert({
+    title, slug, platform, summary, description: description || null,
+    cover_url: coverUrl || null, release_date: releaseDate || null,
+    developer: developer || null, publisher: publisher || null,
+    genre: genre || null, status
+  });
+  if (error) redirect("/admin?erro=" + encodeURIComponent(error.message));
+  revalidatePath("/"); revalidatePath("/jogos"); revalidatePath("/admin");
+  redirect("/admin?sucesso=Jogo%20cadastrado%20no%20catálogo.");
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
