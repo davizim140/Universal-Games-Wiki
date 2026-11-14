@@ -11,7 +11,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
     if (user) {
       const pr = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle(); profile = pr.data;
       if (profile && ["moderator", "admin"].includes(profile.role)) {
-        const result = await supabase.from("contributions").select("id,type,title,platform,payload,created_at,user_id").eq("status", "pending").order("created_at");
+        const result = await supabase.from("contributions").select("id,type,title,platform,payload,created_at,user_id,status,moderator_note,reviewed_at").order("created_at", { ascending: false }).limit(200);
         items = result.data ?? []; if (result.error) message = result.error.message;
       }
     }
